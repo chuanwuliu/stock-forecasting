@@ -1,11 +1,11 @@
 import os
 import pandas as pd
 
-data_folder = "/Users/charles_liu/Github/stock_forecasting/ASX-2015-2018"
+asx_data_dir = os.environ['ASX_DATA_DIR']
 fmt = "%Y%m%d"
 
 
-class PricesData:
+class PriceData:
     """
     Prices Data class
     """
@@ -35,6 +35,10 @@ class PricesData:
         return self._df['close']
 
     @property
+    def volumn(self):
+        return self._df['volumn']
+
+    @property
     def future_close_return(self):
         return self.close / self.close.shift(1) - 1
 
@@ -48,19 +52,16 @@ class PricesData:
 
 
 def read_stock_prices(ticker):
-    # start_date = "20150102"
-    # end_date = "20180629"
-    # ts = pd.date_range(start_date, end_date)
-    # s = pd.DatetimeIndex(ts)
     columns = ['ticker', 'date', 'open', 'high', 'low', 'close', 'volume']
     df = pd.DataFrame(columns=columns)
-    for fname in os.listdir(data_folder):
-        file = os.path.join(data_folder, fname)
+    for fname in os.listdir(asx_data_dir):
+        file = os.path.join(asx_data_dir, fname)
         dfi = pd.read_csv(file, header=None, names=columns, parse_dates=['date'])
         if ticker in dfi['ticker'].values:
             df = df.append(dfi[dfi['ticker'] == ticker])
     df = df.set_index('date')
     df = df.drop(columns=['ticker'])
     df.name = ticker
+    df = df.sort_index()
     return df
 
