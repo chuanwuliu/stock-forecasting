@@ -5,52 +5,6 @@ data_dir = os.environ['ASX_DATA_DIR']
 columns = ['ticker', 'date', 'open', 'high', 'low', 'close', 'volume']
 
 
-class PriceData:
-    """
-    Prices Data class
-    """
-
-    def __init__(self, ticker):
-        self._sticker = ticker
-        self._df = read_stock_data(ticker)
-
-    @property
-    def df(self):
-        return self._df
-
-    @property
-    def open(self):
-        return self._df['open']
-
-    @property
-    def high(self):
-        return self._df['high']
-
-    @property
-    def low(self):
-        return self._df['low']
-
-    @property
-    def close(self):
-        return self._df['close']
-
-    @property
-    def volumn(self):
-        return self._df['volumn']
-
-    @property
-    def future_close_return(self):
-        return self.close / self.close.shift(1) - 1
-
-    @property
-    def close_return(self):
-        return self.close / self.close.shift(-1) - 1
-
-    @property
-    def high_low_ratio(self):
-        return self.high / self.low
-
-
 def read_dates():
     """
     Read the list of trading dates from the ASX data set.

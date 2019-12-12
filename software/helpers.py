@@ -52,7 +52,7 @@ def vectorize_target(iterable):
     return y
 
 
-def smooth_curve(points, factor=0.9):
+def smooth_curve(points, factor=0.8):
     smoothed_points = []
     for point in points:
         if smoothed_points:
