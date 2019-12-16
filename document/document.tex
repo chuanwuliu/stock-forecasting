@@ -46,12 +46,12 @@
 
 
 \section{Features}
-This task is a time series forecasting problem. Considering the significant data volume, I decide to use recurrent neural networks to solve this task. At time $t$, the input features are selected as the open, high, low, close prices and the trading volume at past times $t-N$, $t-N+1$, $\cdots$, $t-1$, $t$, where $N$ is the lookback time. The volume is included, because it reflects market's reaction to the prices and provides additional information. The derived features such as high/low are not included, because a neural network is able to approach them.
+This task is a time series forecasting problem. Considering the significant data volume, I decide to use recurrent neural networks to solve this task. At time $t$, the input features are selected as the open, high, low and close prices and the trading volume at past times $t-N$, $t-N+1$, $\cdots$, $t-1$, $t$, where $N$ is the lookback time. The volume is included, because it reflects the market's reaction to the prices and provides additional information. The derived features such as high/low are not included, because a neural network is able to approach these.
 Depending on the target feature, two models are considered:
 \begin{enumerate}
 \item The regression model, in which the target value is the close price at $t+1$, represented as $P_{t+1}^c$.
 
-\item The classification model, in which the future close return $r_{t, t+1} = P_{t+1}^c / P_t - 1$ is calculated and the binary classification target is 1 if $r_{t, t+1}$ is positive or 0 if not. 
+\item The classification model, in which the future close return $r_{t, t+1} = P_{t+1}^c / P_t - 1$ is calculated and the binary classification target is 1 if $r_{t, t+1}$ is positive or 0 if else. 
 \end{enumerate}
 
 \section{Data Preprocessing}
@@ -63,21 +63,21 @@ For a selected ticker, if a data point is not found on a trading date after its 
 \begin{enumerate}
 
 
-\item Remove samples with missing samples. This is the simplest way and and it reduces bias introduced from missing value handling methods. However, in time series forecasting, the data removal will break the time consecutiveness.
+\item Discard samples with missing samples. This is the simplest way and and it does not introduce bias from missing value handling methods. However, in time series forecasting, the data removal will break the time consecutiveness.
 
 \item Impute missing values with a value that has its meaning and distinct from all other values such as 0. This is acceptable, as neural networks will learn from the data that the value 0 means missing data and will start ignoring the value. However if missing value is included in the test set, we have to make sure the missing values are also included in the training set.
 
-\item Impute missing values with the mean or median of each feature. Such a constant is close to the mean or median and will have small contribution to the loss function. However, it introduces bias if most of existing values are far from the mean or median.
+\item Impute missing values with the mean or median of each feature. Such a constant has small contribution to the loss function. However, it introduces bias if most of existing values are far from the mean or median.
 
-\item Impute missing values with other predictive models such as linear interpolation, moving average, AIMA and Exponential Smoothing. However this method requires extra effort to build predictive models for error handling. Subject to the model, the artificial patterns from the predictive model may mislead the neural networks.
+\item Impute missing values with other predictive models such as linear interpolation, moving average, AIMA and Exponential Smoothing. However, this method requires extra effort to build predictive models for error handling. Subject to the model, the artificial patterns from the missing value handling model model may mislead the neural networks.
  
 \end{enumerate}
 
-In my Jupyter notebook, four methods are implemented:: (i) Remove missing values; (ii) Replace missing values with 0; (iii) Replace missing values with column means; and (iv) Linear interpolation. Their performance vary from ticker to ticker depending on the pattern of the signal and number of missing values. However, in this note, Too reduce the number of free parameter, only the ticker with no or few missing values such as ANZ, CBA, NAB and BHP are presented.
+In my Jupyter notebook, four methods are implemented: (i) Remove missing values; (ii) Replace missing values with 0; (iii) Replace missing values with column means; and (iv) Linear interpolation. Their performances vary from ticker to ticker depending on the pattern of the signal and number of missing values. However, in this note, too reduce the number of free parameter, only the tickers with no or few missing values such as ANZ, CBA, NAB and BHP are presented.
 
 
 \subsection{Data Scaling}
-The price columns and the volume column have different scales so that data scaling is needed. There are two commonly used data scaling methods: the standard scaling and the MinMax scaling. The MinMax scaling is adopted in this task. In contrast, the standard scaling will result negative prices and volumes which is not appropriate. The MinMax scaling is defined as
+The price columns and the volume column have different scales so that data scaling is needed. There are two commonly used data scaling methods: the standard scaling and the MinMax scaling. The MinMax scaling is adopted in this task. In contrast, the standard scaling will result negative prices and volumes. The MinMax scaling is defined as
 \begin{equation}
 X_\mathrm{norm} = \frac{X-X_\mathrm{min}}{X_\mathrm{max} - X_\mathrm{min}}
 \end{equation}
@@ -87,19 +87,17 @@ X_\mathrm{norm} = \frac{X-X_\mathrm{min}}{X_\mathrm{max} - X_\mathrm{min}}
 In this model I use the prices and volumes of past days, e.g. the past five days to predict the close price of the next day.
 
 \subsection{Error metric}
-We need an error metric to measure the difference between prediction and the test data. Because our error corresponds to the gain or loss of currency which is measured in liner scale. The Mean Absolute Error (MAE) is used as the error metric. MAE is defined as
+We need an error metric to measure the difference between the model prediction and the test data. Because our error corresponds to the gain or loss of currency which is measured in liner scale. The Mean Absolute Error (MAE) is used as the error metric. MAE is defined as
 \begin{equation}
 \mathrm{MAE} = \frac{\sum_{i=1}^n |y_\mathrm{pred} - y_\mathrm{real}|}{n},
 \end{equation}
 where $y_\mathrm{pred}$ and $y_\mathrm{real}$ are the predicted value and the real value respectively.
 
 \subsection{Baseline model}
-To evaluate of power of my model, I first build a simple model as the baseline. We expect our neural networks is able to overtake the simple model. In this simple model, I assume the close price remains same on the next day, i.e. $P_{t+1}^c$ = $P_{t}^c$
+To evaluate of power of my model, I first build a simple model as the baseline. We expect our neural networks are able to overtake the simple model. In this simple model, I assume the close price remains same on the next day, i.e. $P_{t+1}^c$ = $P_{t}^c$.
 
 \subsection{Recurrent Neural Networks}
-Recurrent Neural Network (RNN) is one the powerful tools for modelling sequential data including time series data. A Long Short-Term Memory (LSTM) network, which is a type of Recurrent Neural Networks is implement for this time series forecasting problem.
-
-The structure of my neural network contains:
+Recurrent Neural Network (RNN) is one the powerful tools for modelling sequential data including time series data. A Long Short-Term Memory (LSTM) network, which is a type of RNN is implement for this time series forecasting problem. The structure of my neural network contains:
 \begin{enumerate}
 \item Four LSTM layers.
 \item Four Dropout layers with drop out rate 0.2
@@ -123,7 +121,7 @@ There are a number of hyper-parameters in this model:
 \end{itemize}
 I have completed a number of runs to tune the hyper-parameters.
 For example, to find out the number of iteration epochs.
-I plot the loss function for training and validation set as shown in Figure \ref{fig:regression_epochs}. We can see  the model stop improving after $\sim 100$ epochs. Therefore 100 is adopted for epochs.
+I have plotted the loss function for training and validation set as shown in Figure \ref{fig:regression_epochs}. We can see  the model stop improving after $\sim 100$ epochs. Therefore 100 is adopted for epochs.
 
 \begin{figure}
 	\centering
@@ -157,13 +155,13 @@ This is because the model is not fully tuned.
 \end{figure}
 
 \begin{table}
- \caption{MAE Loss of the regression}
+ \caption{MAE loss of the regression}
  \label{tab:regression_loss}
  \centering
  \begin{tabular}
  { l  c  c  l }
   \hline
- Ticker & Baseline Loss & Model Loss\\
+ Ticker & Baseline loss & Model loss\\
  \hline
  ANZ & 0.012 & 0.24 \\
  CBA & 0.018 & 0.76 \\
@@ -177,7 +175,7 @@ This is because the model is not fully tuned.
 
 
 \section{Binary Classification of future close return}
-In this approach, I first calculate the future close return  $r_{t, t+1} = P_{t+1}^c / P_t - 1$, The binary classification target is defined as
+In this approach, I first calculate the future close return  $r_{t, t+1} = P_{t+1}^c / P_t - 1$ and the binary classification target is defined as
 \begin{align*}
  1\ \mathrm{if} \ r_{t, t+1} > 0\\
  0\ \mathrm{if}\ r_{t, t+1} \le 0
@@ -197,13 +195,13 @@ The implemented network for this problem contains:
 \begin{enumerate}
 \item Two LSTM layers.
 \item Two Dropout layers with drop out rate 0.2
-\item One Dense layer with activation sigmoid. The sigmoid is use to convert values to probability.
+\item One Dense layer with sigmoid activation. The sigmoid activation is use to convert numeric values to probability.
 \end{enumerate}
 
 The model is optimised with Adam optimizer. The loss function of the model is the binary crossentropy.
 
 \subsection{Hyper Parameters}
-Same set of hype parameters is adopted in this classification model. Figure	\label{fig:classification_epochs} shows the classification accuracy over 200 iteration epochs. We see that the accuracy reaches it maximum at $\sim 100$ and stop improving after that.
+The same set of hype parameters is adopted in this classification model. Figure	\label{fig:classification_epochs} shows the classification accuracy over 200 iteration epochs. We see that the accuracy reaches it maximum at $\sim 100$ and stop improving after that.
 \begin{figure}
 	\centering
 	\includegraphics[width=0.9\textwidth]{./figures/classification_epochs.pdf}
@@ -213,7 +211,7 @@ Same set of hype parameters is adopted in this classification model. Figure	\lab
 \end{figure}
 
 \subsection{Results}
-The binary classification accuracy of example tickers is shown in Figure \ref{tab:classification_accuracy}. We see that my current classification model is not about to predict the future close return.
+The binary classification accuracy of example tickers is shown in Figure \ref{tab:classification_accuracy}. We see that this current classification model is not able to predict the future close return, except for NAB, which has a 
 \begin{table}
  \caption{Accuracy of the binary classification}
  \label{tab:classification_accuracy}
@@ -221,7 +219,7 @@ The binary classification accuracy of example tickers is shown in Figure \ref{ta
  \begin{tabular}
  { l  c  c  l }
   \hline
- Ticker & Baseline Loss & Loss\\
+ Ticker & Baseline accuracy & Model accuracy\\
  \hline
  ANZ & 48\% & 46\% \\
  CBA & 45\% & 46\% \\
@@ -233,7 +231,7 @@ The binary classification accuracy of example tickers is shown in Figure \ref{ta
 \end{table}  
 
 \section{Conclusion and Discussion}
-We see in both regression and classification approach, the RNN model does not overtake the simple baseline. This is because of two reasons:
+We see in both regression and classification approach, the RNN model does not overtake the simple baseline. This may be because of two reasons:
 \begin{enumerate}
  \item The models have not been well constructed and tuned. More comprehensive parameter tuning is required.
  \item The stock prices of the past is not a good indicator of future prices.
